@@ -9,7 +9,7 @@ async function bootstrap() {
   // Create an instance of the Nest application
   const app = await NestFactory.create(AppModule);
 
-  // Start listening on port 4000
+  // Start listening on port 6000
   await app.listen(6000);
 }
 

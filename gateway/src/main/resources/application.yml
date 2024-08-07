@@ -4,19 +4,7 @@ spring:
   application:
     name: api-gateway
   cloud:
-    gateway:
-      routes:
-        - id: products-service
-          uri: http://localhost:8081
-          predicates:
-            - Path=/api/product/**
-        - id: orders-service
-          uri: http://localhost:8082
-          predicates:
-            - Path=/api/order/**
-        - id: auth-service
-          uri: http://localhost:4000
-          predicates:
-            - Path=/api/auth/**
     config:
       enabled: false
+jwt:
+  secret: MiAVzqUXy5Tfr1kVIGpPMiAVzqUXy5Tfr1kVIGpP

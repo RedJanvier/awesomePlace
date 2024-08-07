@@ -19,7 +19,7 @@ import { KafkaProducerModule } from "src/producer/producer.module";
         secret: configService.get("jwt").secret,
         signOptions: {
           expiresIn: configService.get("jwt").expiresIn,
-          issuer: "classifieds-api",
+          issuer: "awesome-marketplace-api",
         },
       }),
       inject: [ConfigService],

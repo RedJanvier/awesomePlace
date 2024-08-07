@@ -10,7 +10,7 @@ export class KafkaProducerService {
   constructor() {
     this.kafkaInstance = new Kafka({
       clientId: "AUTH_SERVICE",
-      brokers: ["localhost:9092"],
+      brokers: ["broker:29092"],
     });
 
     this.producer = this.kafkaInstance.producer();

@@ -17,7 +17,7 @@ export class KafkaConsumerService implements OnApplicationShutdown {
    * Kafka instance for connecting to Kafka brokers.
    */
   private readonly kafka = new Kafka({
-    brokers: ['localhost:9092'],
+    brokers: ['broker:29092'],
   });
 
   /**
