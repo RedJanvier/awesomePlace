@@ -8,7 +8,7 @@
 		<version>3.2.7</version>
 	</parent>
 	<groupId>com.awesome.marketplace.orders</groupId>
-	<artifactId>orders_service</artifactId>
+	<artifactId>order</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>orders_service</name>
 	<description>Demo project for Spring Boot</description>

@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.marketplace.product</groupId>
-	<artifactId>products_service</artifactId>
+	<artifactId>product</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>products_service</name>
 	<description>Demo project for Spring Boot</description>

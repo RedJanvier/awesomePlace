@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.awesome.marketplace</groupId>
-	<artifactId>api_gateway</artifactId>
+	<artifactId>gateway</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>api_gateway</name>
 	<description>Awesome Marketplace API Gateway</description>
