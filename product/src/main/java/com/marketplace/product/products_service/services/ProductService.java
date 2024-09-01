@@ -5,7 +5,14 @@ import com.marketplace.product.products_service.dto.ProductResponse;
 import com.marketplace.product.products_service.exceptions.CustomClientException;
 import com.marketplace.product.products_service.models.Category;
 import com.marketplace.product.products_service.models.Product;
+import com.marketplace.product.products_service.models.QProduct;
 import com.marketplace.product.products_service.repositories.ProductRepository;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.impl.JPAQuery;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,9 +26,34 @@ public class ProductService {
 
   private final ProductRepository productRepository;
   private final CategoryService categoryService;
+  private final EntityManager entityManager;
 
   public List<ProductResponse> getAll(Integer category, String tag, String query) {
-    List<Product> products = productRepository.findAll();
+    // List<Product> products = productRepository.findAll();
+
+    JPAQueryFactory queryFactory = new JPAQueryFactory(entityManager);
+    QProduct product = QProduct.product;
+    JPAQuery<Product> queryString = queryFactory.selectFrom(product);
+    Boolean isNewQuery = true;
+    BooleanExpression exp = null;
+    if (query != null) {
+      exp = product.name.containsIgnoreCase(query);
+      isNewQuery = false;
+    }
+    
+    if (tag != null) {
+      exp = !isNewQuery ? exp.and(Expressions.booleanTemplate("function('ARRAY_CONTAINS', {0}, {1})", product.tags, tag))
+        : Expressions.booleanTemplate("function('ARRAY_CONTAINS', {0}, {1})", product.tags, tag);
+      isNewQuery = false;
+    }
+
+    if (category != null) {
+      exp = !isNewQuery ? exp.and(product.category.id.eq(category)) : product.category.id.eq(category);
+      isNewQuery = false;
+    }
+
+    if (query != null || tag != null || category != null) queryString = queryString.where(exp);
+    List<Product> products = queryString.fetch();
     return products.stream().map(this::getProductResponse).toList();
   }
 

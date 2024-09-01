@@ -2,14 +2,15 @@ package com.marketplace.product.products_service.services;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.marketplace.product.products_service.dto.CategoryRequest;
 import com.marketplace.product.products_service.dto.CategoryResponse;
+import com.marketplace.product.products_service.exceptions.CustomClientException;
 import com.marketplace.product.products_service.models.Category;
 import com.marketplace.product.products_service.repositories.CategoryRepository;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -29,7 +30,7 @@ public class CategoryService {
   }
   
   public Category findOne(Integer id) {
-    return categoryRepository.findById(id).get();
+    return categoryRepository.findById(id).orElseThrow(() -> new CustomClientException(HttpStatus.NOT_FOUND, "Category not found"));
   }
 
   public String delete(int id) {
