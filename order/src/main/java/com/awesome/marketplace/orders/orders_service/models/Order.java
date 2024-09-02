@@ -35,13 +35,16 @@ public class Order implements Comparable<Order>{
   public Date updatedAt;
   
   @Column(nullable = false)
-  public String status = "pending";
+  public String status = "NEW";
   
   @Column(nullable = false)
   public int quantity;
   
   @Column(name = "product_id", nullable = false)
   public Integer productId;
+  
+  @Column(name = "user_id", nullable = false)
+  public Integer userId;
 
   @Override
   public boolean equals(Object obj) {

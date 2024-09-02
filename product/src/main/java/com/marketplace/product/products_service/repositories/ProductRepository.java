@@ -15,15 +15,4 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 //    @Modifying
 //    @Query("update Product p set p.featured = :featured where p.id = :id")
 //    int setIsFeaturedById(@Param("id") Integer id, @Param("featured") Boolean featured);
-
-    // @Autowired
-    // private EntityManager entityManager;
-
-    // public List<Product> findProductsByTitle(String title) {
-    //     JPAQueryFactory queryFactory = new JPAQueryFactory(entityManager);
-    //     QProduct product = QProduct.product;
-    //     return queryFactory.selectFrom(product)
-    //             .where(product.name.containsIgnoreCase(title))
-    //             .fetch();
-    // }
 }

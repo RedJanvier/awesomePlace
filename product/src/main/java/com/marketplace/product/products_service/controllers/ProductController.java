@@ -6,16 +6,19 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 
 import com.marketplace.product.products_service.dto.ProductRequest;
 import com.marketplace.product.products_service.services.ProductService;
 import com.marketplace.product.products_service.utils.ResponseHandler;
+import com.marketplace.product.products_service.utils.AllowAdminOnly;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/product")
 @RequiredArgsConstructor
+@Validated
 @Slf4j
 public class ProductController {
 
@@ -28,6 +31,7 @@ public class ProductController {
   }
 
   @PostMapping
+  @AllowAdminOnly()
   public ResponseEntity<Object> create(@RequestBody ProductRequest product) {
     return ResponseHandler.generateResponse(productService.add(product), HttpStatus.CREATED);
   }
@@ -38,11 +42,13 @@ public class ProductController {
   }
 
   @PutMapping("/{id}")
+  @AllowAdminOnly()
   public ResponseEntity<Object> makeFeatured(@PathVariable int id) throws Exception {
     return ResponseHandler.generateResponse(productService.setAsFeatured(id), HttpStatus.OK);
   }
 
   @DeleteMapping("/{id}")
+  @AllowAdminOnly()
   public ResponseEntity<Object> delete(@PathVariable int id) {
     return ResponseHandler.generateResponse(productService.delete(id), HttpStatus.OK);
   }

@@ -1,5 +1,5 @@
 import * as SendGrid from '@sendgrid/mail';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 /**
@@ -35,7 +35,7 @@ export class SendGridService {
       return transport;
     } catch (error) {
       // Log any errors that occur during email sending
-      Logger.error(error);
+      console.error(error);
     }
   }
 }

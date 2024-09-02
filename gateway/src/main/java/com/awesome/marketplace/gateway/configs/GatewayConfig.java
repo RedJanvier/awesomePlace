@@ -16,13 +16,13 @@ public class GatewayConfig {
     @Bean
     public RouteLocator routes(RouteLocatorBuilder builder) {
         return builder.routes()
-                .route("product-service", r -> r.path("/api/product/**")
+                .route("product-service", r -> r.path("/api/product/**", "/api/review/**", "/api/category/**")
                         .filters(f -> f.filter(filter))
                         .uri("http://product-service:8081"))
                 .route("order-service", r -> r.path("/api/order/**")
                         .filters(f -> f.filter(filter))
-                        .uri("http://order-service:8081"))
-                .route("auth-service", r -> r.path("/api/auth/**")
+                        .uri("http://order-service:8082"))
+                .route("auth-service", r -> r.path("/api/auth/**", "/api/profile/**")
                         .filters(f -> f.filter(filter))
                         .uri("http://auth-service:4000"))
                 .build();

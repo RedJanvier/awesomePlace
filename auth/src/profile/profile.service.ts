@@ -11,7 +11,7 @@ import { EStatus } from "./enums/status.enum";
 import { KafkaProducerService } from "../producer/producer.service";
 
 @Injectable()
-export class AuthService {
+export class ProfileService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly prismaService: PrismaService,

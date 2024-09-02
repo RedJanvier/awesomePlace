@@ -22,7 +22,7 @@ public class ReviewService {
   @Autowired
   private final ProductService productService;
 
-  public List<ReviewResponse> getAll() {
+  public List<ReviewResponse> getAll(int productId) {
     return repository.findAll().stream().map(this::mapToDTO).toList();
   }
 

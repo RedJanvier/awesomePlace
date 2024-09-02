@@ -68,12 +68,13 @@ export class KafkaConsumerService implements OnApplicationShutdown {
     const emailData = {
       to: recipientEmail,
       from: 'noreply@awesomeplace.com',
-      subject: 'Activate your book store account',
+      subject: 'Activate your Awesome Marketplace account',
       html: `Dear ${customerName},\n\nWelcome to Awesome marketplace.\nExceptionally please click the link to <a href="${activationLink}">activate your account</a>.`,
     };
 
     try {
       await this.sendGridService.send(emailData);
+      console.log('EMAIL SUCCESSFULLY SENT TO: ' + recipientEmail);
     } catch (error) {
       console.error(
         `Error sending activation email of ${recipientEmail}:`,

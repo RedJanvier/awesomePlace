@@ -77,11 +77,12 @@ public class ProductService {
     return getProductResponse(found);
   }
 
-  public Product findOneProduct(int id) throws Exception {
+  public Product findOneProduct(int id) throws CustomClientException {
     return productRepository.findById(id).orElseThrow(() -> new CustomClientException(HttpStatus.NOT_FOUND, "Product not found"));
   }
 
-  public String delete(int id) {
+  public String delete(int id) throws CustomClientException {
+    findOneProduct(id);
     productRepository.deleteById(id);
     return "Product deleted successfully";
   }
