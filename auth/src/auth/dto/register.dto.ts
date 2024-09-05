@@ -13,8 +13,4 @@ export class RegisterDto extends LoginDto {
 
   @IsString()
   name: string;
-
-  role?: ESellerOrCustomer;
-
-  status?: EStatus;
 }

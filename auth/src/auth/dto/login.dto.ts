@@ -1,4 +1,6 @@
 import { IsEmail, IsString } from "class-validator";
+import { ResponseDto } from "../../_shared/dto/response.dto";
+import { HttpStatus } from "@nestjs/common";
 
 export class LoginDto {
   @IsEmail()
@@ -7,13 +9,8 @@ export class LoginDto {
   password: string;
 }
 
-export class LoginResultDto {
+export class LoginResultDto extends ResponseDto {
   constructor(accessToken: string, refreshToken: string) {
-    this.accessToken = accessToken;
-    this.refreshToken = refreshToken;
-    this.success = true;
+    super(HttpStatus.OK, "Successful login", { accessToken, refreshToken });
   }
-  accessToken: string;
-  refreshToken: string;
-  success: boolean;
 }
