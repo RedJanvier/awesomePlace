@@ -1,12 +1,16 @@
-import { Injectable, OnApplicationShutdown } from '@nestjs/common';
-import { Kafka, Consumer } from 'kafkajs';
-import { SendGridService } from './sendgrid.service';
+import * as fs from "fs";
+import { Injectable, OnApplicationShutdown } from "@nestjs/common";
+import { Kafka, Consumer } from "kafkajs";
+import { SendGridService } from "./sendgrid.service";
+import { constants } from "./config/config";
+import { IConstants } from "./interfaces/constants.interface";
 
 /**
  * Service responsible for consuming messages from Kafka and sending activation emails.
  */
 @Injectable()
 export class KafkaConsumerService implements OnApplicationShutdown {
+  CONSTANTS: IConstants = constants();
   /**
    * Constructor for KafkaConsumerService.
    * @param {SendGridService} sendGridService - Service responsible for sending emails using SendGrid.
@@ -17,7 +21,7 @@ export class KafkaConsumerService implements OnApplicationShutdown {
    * Kafka instance for connecting to Kafka brokers.
    */
   private readonly kafka = new Kafka({
-    brokers: ['broker:29092'],
+    brokers: [this.CONSTANTS.brokerUrl],
   });
 
   /**
@@ -37,9 +41,9 @@ export class KafkaConsumerService implements OnApplicationShutdown {
    * Start consuming messages from Kafka.
    */
   async consume() {
-    this.consumer = this.kafka.consumer({ groupId: 'notifications-consumer' });
+    this.consumer = this.kafka.consumer({ groupId: "notifications-consumer" });
     await this.consumer.connect();
-    await this.consumer.subscribe({ topic: 'notifications.register.evt' });
+    await this.consumer.subscribe({ topic: "notifications.register.evt" });
 
     await this.consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
@@ -67,18 +71,39 @@ export class KafkaConsumerService implements OnApplicationShutdown {
   ) {
     const emailData = {
       to: recipientEmail,
-      from: 'noreply@awesomeplace.com',
-      subject: 'Activate your book store account',
-      html: `Dear ${customerName},\n\nWelcome to Awesome marketplace.\nExceptionally please click the link to <a href="${activationLink}">activate your account</a>.`,
+      from: this.CONSTANTS.sendgridMail,
+      subject: `Verify your email for ${this.CONSTANTS.instanceName}`,
+      html: this.formatTemplate(
+        {
+          customerName,
+          activationLink,
+          instanceName: this.CONSTANTS.instanceName,
+        },
+        "EmailVerification.html",
+      ),
     };
 
     try {
       await this.sendGridService.send(emailData);
+      console.log("EMAIL SUCCESSFULLY SENT TO: " + recipientEmail);
     } catch (error) {
       console.error(
         `Error sending activation email of ${recipientEmail}:`,
         error,
       );
     }
+  }
+
+  formatTemplate(params: object, template: string): string {
+    const templateUrl = "/templates/" + template;
+    let htmlFile = fs.readFileSync(__dirname + templateUrl, "utf-8");
+
+    for (const key in params) {
+      if (Object.prototype.hasOwnProperty.call(params, key)) {
+        const param = params[key];
+        htmlFile = htmlFile.replaceAll(`{{${key}}}`, param);
+      }
+    }
+    return htmlFile;
   }
 }

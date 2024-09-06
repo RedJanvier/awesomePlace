@@ -21,6 +21,7 @@ export function constants(): IConstants {
     },
     adminEmail: process.env.ADMIN_EMAIL,
     adminPassword: process.env.ADMIN_PASSWORD,
+    serverUrl: process.env.SERVER_URL,
     brokerUrl: process.env.BROKER_URL || "localhost:9092",
   };
 }

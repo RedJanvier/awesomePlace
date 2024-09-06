@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.marketplace.product.products_service.dto.ReviewRequest;
 import com.marketplace.product.products_service.services.ReviewService;
+import com.marketplace.product.products_service.utils.AllowAdminOnly;
 import com.marketplace.product.products_service.utils.ResponseHandler;
 
 import lombok.RequiredArgsConstructor;
@@ -27,9 +28,9 @@ public class ReviewController {
   @Autowired
   ReviewService service;
   
-  @GetMapping()
-  public ResponseEntity<Object> listProducts() {
-      return ResponseHandler.generateResponse(service.getAll(), HttpStatus.OK);
+  @GetMapping("/{id}")
+  public ResponseEntity<Object> list(@PathVariable int id) {
+      return ResponseHandler.generateResponse(service.getAll(id), HttpStatus.OK);
   }
 
   @PostMapping
@@ -38,6 +39,7 @@ public class ReviewController {
   }
 
   @DeleteMapping("/{id}")
+  @AllowAdminOnly()
   public ResponseEntity<Object> delete(@PathVariable int id) {
     return ResponseHandler.generateResponse(service.delete(id), HttpStatus.OK);
   }

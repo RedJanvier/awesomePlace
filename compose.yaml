@@ -19,6 +19,8 @@ services:
       - 'PGDATA=/data/postgres'
     volumes:
       - ./postgres/main:/data/postgres
+    ports:
+      - "5432:5432"
     restart: always
 
   zookeeper:
@@ -88,6 +90,8 @@ services:
       dockerfile: ./Dockerfile
     ports:
       - "8081:8081"
+    volumes:
+      - ./product:/app/products
     depends_on:
       - auth-service
       - postgres-main
@@ -96,10 +100,10 @@ services:
   ## Orders-Service Docker Compose Config
   order-service:
     build: 
-      context: ./product
+      context: ./order
       dockerfile: ./Dockerfile
     ports:
-      - "8082:8081"
+      - "8082:8082"
     depends_on:
       - auth-service
       - notification-service

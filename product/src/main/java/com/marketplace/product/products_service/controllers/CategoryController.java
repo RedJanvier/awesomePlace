@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.marketplace.product.products_service.services.CategoryService;
+import com.marketplace.product.products_service.utils.AllowAdminOnly;
 import com.marketplace.product.products_service.utils.ResponseHandler;
 
 import lombok.RequiredArgsConstructor;
@@ -33,11 +34,13 @@ public class CategoryController {
   }
 
   @PostMapping
+  @AllowAdminOnly()
   public ResponseEntity<Object> createCategory(@RequestBody @Valid CategoryRequest category) {
     return ResponseHandler.generateResponse(categoryService.addOne(category), HttpStatus.CREATED);
   }
 
   @DeleteMapping("/{id}")
+  @AllowAdminOnly()
   public ResponseEntity<Object> delete(@PathVariable int id) {
     return ResponseHandler.generateResponse(categoryService.delete(id), HttpStatus.OK);
   }

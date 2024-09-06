@@ -1,5 +1,7 @@
 package com.awesome.marketplace.gateway.configs;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -41,9 +43,12 @@ public class AuthenticationFilter implements GatewayFilter {
                 return onError(exchange, HttpStatus.UNAUTHORIZED);
             }
 
-            String role = jwtUtils.getRole(token);
-            log.info("Decoded Role {}", role);
-            request = request.mutate().header("X-auth-role", role).build();
+            List<String> headers = jwtUtils.getHeaders(token);
+            if (headers != null && headers.size() > 0) 
+                request = request.mutate()
+                    .header("X-auth-role", headers.get(0))
+                    .header("X-auth-id", headers.get(1))
+                    .build();
         }
         ServerWebExchange exchange1 = exchange.mutate().request(request).build();
         return chain.filter(exchange1);

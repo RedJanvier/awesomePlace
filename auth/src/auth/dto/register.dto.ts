@@ -1,4 +1,4 @@
-import { IsEnum, IsString } from "class-validator";
+import { IsString } from "class-validator";
 import { LoginDto } from "./login.dto";
 import { EStatus } from "../enums/status.enum";
 
@@ -13,9 +13,4 @@ export class RegisterDto extends LoginDto {
 
   @IsString()
   name: string;
-
-  @IsEnum(ESellerOrCustomer)
-  role: ESellerOrCustomer;
-
-  status?: EStatus;
 }

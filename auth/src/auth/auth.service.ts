@@ -9,14 +9,19 @@ import { ERole } from "./enums/role.enum";
 import { JwtPayload } from "./interfaces/jwt.payload.interface";
 import { EStatus } from "./enums/status.enum";
 import { KafkaProducerService } from "../producer/producer.service";
+import { constants } from "src/_shared/config/config";
 
 @Injectable()
 export class AuthService {
+  CONSTANTS;
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly prismaService: PrismaService,
     private readonly KafkaProducerService: KafkaProducerService,
-  ) {}
+  ) {
+    this.CONSTANTS = constants();
+  }
 
   publishMessage(message: any): Promise<void> {
     return this.KafkaProducerService.publish(
@@ -30,46 +35,59 @@ export class AuthService {
    * @param dto REGISTER DTO
    */
   async register(dto: RegisterDto) {
-    const { email, password, username, role, name: fullname } = dto;
-    const user = await this.prismaService.user.findFirst({
-      where: {
-        email,
-      },
-    });
-    if (user) {
-      throw new BadRequestException("User already exists");
-    }
-    const hashedPassword = await this.hashPassword(password);
-    const newUser = await this.prismaService.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        username,
-        role,
-      },
-    });
-    await this.prismaService.userProfile.create({
-      data: {
-        name: fullname,
-      },
-    });
-    const { refreshToken } = await this.generateTokens({
-      id: newUser.id,
-      role: newUser.role as ERole,
-    });
-    await this.prismaService.user.update({
-      where: { id: newUser.id },
-      data: { refreshToken },
-    });
+    const { email, password, username, name: fullname } = dto;
 
-    this.publishMessage({
-      link: "http://localhost:8080/api/auth/verify?token=" + refreshToken,
-      user: {
-        name: newUser.username,
-        email: newUser.email,
-      },
+    return this.prismaService.$transaction(async (tx) => {
+      const user = await tx.user.findFirst({
+        where: {
+          OR: [{ email }, { username }],
+        },
+      });
+      const userProfile = await tx.userProfile.findFirst({
+        where: { name: fullname },
+      });
+      if (user || userProfile)
+        throw new BadRequestException("User already exists");
+
+      const hashedPassword = await this.hashPassword(password);
+      const newUser = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          username,
+          role: ERole.CUSTOMER,
+          status: EStatus.NEW,
+        },
+      });
+      if (newUser == null || newUser.id == null)
+        throw new BadRequestException(
+          "Unable to create user! Please check well your input.",
+        );
+
+      await tx.userProfile.create({
+        data: {
+          name: fullname,
+          userId: newUser.id,
+        },
+      });
+      const { refreshToken } = await this.generateTokens({
+        id: newUser.id,
+        role: newUser.role as ERole,
+      });
+      await tx.user.update({
+        where: { id: newUser.id },
+        data: { refreshToken },
+      });
+
+      this.publishMessage({
+        link: `${this.CONSTANTS.serverUrl}/api/auth/verify?token=${refreshToken}`,
+        user: {
+          name: newUser.username,
+          email: newUser.email,
+        },
+      });
+      return `Check your email (${newUser.email}) to verify your account.`;
     });
-    return `Check your email (${newUser.email}) to verify your account.`;
   }
 
   /**
@@ -80,9 +98,7 @@ export class AuthService {
   async login(dto: LoginDto) {
     const { email, password } = dto;
     const user = await this.prismaService.user.findFirst({
-      where: {
-        email,
-      },
+      where: { email },
     });
     if (!user)
       throw new BadRequestException("The email or password is incorrect");

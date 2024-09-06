@@ -7,6 +7,7 @@ export interface IConstants {
   swaggerEnabled?: boolean;
   adminEmail?: string;
   adminPassword?: string;
+  serverUrl: string;
   brokerUrl?: string;
 }
 

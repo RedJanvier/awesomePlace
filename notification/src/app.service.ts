@@ -1,5 +1,5 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { KafkaConsumerService } from './consumer.service';
+import { Injectable, OnModuleInit } from "@nestjs/common";
+import { KafkaConsumerService } from "./consumer.service";
 
 /**
  * Service responsible for initializing the application and consuming messages from Kafka.

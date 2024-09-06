@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.awesome.marketplace.orders.orders_service.clients.ProductClient;
 import com.awesome.marketplace.orders.orders_service.dto.ProductResponse;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import com.awesome.marketplace.orders.orders_service.dto.OrderRequest;
 import com.awesome.marketplace.orders.orders_service.dto.OrderResponse;
 import com.awesome.marketplace.orders.orders_service.models.Order;
+import com.awesome.marketplace.orders.orders_service.models.Product;
 import com.awesome.marketplace.orders.orders_service.repositories.OrderRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -28,28 +30,45 @@ public class OrderService {
   private final ProductClient productClient;
   private final RestService<ProductsClientResponseDto> restService;
 
-  public List<OrderResponse> getAll() {
-    return repository.findAllByOrderByCreatedAtDesc().stream().map(this::mapToDTO).toList();
+  public List<OrderResponse> getAll(String id, String role) {
+    Integer userId = Integer.parseInt(id);
+    List<OrderResponse> orders = role == "ADMIN"
+      ? repository.findAll().stream().map(this::mapToDTO).toList()
+      : repository.findAllByUserIdOrderByCreatedAtDesc(userId).stream().map(this::mapToDTO).toList();
+    return orders;
   }
 
-  public OrderResponse add(OrderRequest orderReq) throws CustomClientException {
+  public OrderResponse add(OrderRequest orderReq, String id) throws CustomClientException {
+    Integer userId = Integer.parseInt(id);
     Map<String, Object> body = new HashMap<>();
     HttpHeaders headers = new HttpHeaders();
     headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString());
     ResponseEntity<ProductsClientResponseDto> productResponse = null;
     try {
-        productResponse = restService.sendRequest("http://localhost:8081/api/product/" + orderReq.productId, HttpMethod.GET, body, headers, ProductsClientResponseDto.class);
+      productResponse = restService.sendRequest(
+        "http://host.docker.internal:8081/api/product/" + orderReq.productId,
+        HttpMethod.GET,
+        body,
+        headers,
+        ProductsClientResponseDto.class
+      );
     } catch (Exception e) {
-        throw new CustomClientException(HttpStatus.NOT_FOUND, "Product doesn't exist");
+      log.error("EXCEPTION CREATING ORDER: {}", e);
+      throw new CustomClientException(HttpStatus.NOT_FOUND, "Product not found!");
     }
     ProductResponse product = Objects.requireNonNull(productResponse.getBody()).getData();
 
-    if (orderReq.quantity < product.getQuantity().intValueExact()) throw new CustomClientException(HttpStatus.BAD_REQUEST, "Product quantity requested is not available!");
+    if (orderReq.quantity > product.getQuantity().intValueExact())
+      throw new CustomClientException(
+        HttpStatus.BAD_REQUEST,
+        "Product quantity requested is not available! The only available quantity is: " + product.getQuantity().intValueExact()
+      );
 
     Order order = new Order();
-    order.setStatus(orderReq.status);
+    order.setStatus(orderReq.status != null ? orderReq.status : "NEW");
     order.setProductId(orderReq.productId);
     order.setQuantity(orderReq.quantity);
+    order.setUserId(userId);
 
     Order savedOrder = repository.save(order);
 
@@ -58,11 +77,37 @@ public class OrderService {
     return mapToDTO(savedOrder, product);
   }
 
-  public OrderResponse findOne(int id) {
-    return repository.findById(id).stream().map(this::mapToDTO).toList().get(0);
+  public OrderResponse findOne(int id, String usrId) throws CustomClientException {
+    Integer userId = Integer.parseInt(usrId);
+    Order order = null;
+    try {
+      order = repository.findByIdAndUserId(id, userId).stream().toList().get(0);
+    } catch (Exception e) {
+      log.error("Issue retrieving the order {}", e);
+    }
+    if (order == null) throw new CustomClientException(HttpStatus.NOT_FOUND, "Order not found");
+    return mapToDTO(order);
+  }
+
+  public OrderResponse updateStatus(Integer id, String status) throws CustomClientException {
+    Optional<Order> res = repository.findById(id);
+
+    if (res.isPresent()) {
+      Order order = res.get();
+      if (order.status.equalsIgnoreCase(status)) throw new CustomClientException(HttpStatus.BAD_REQUEST, "Order is already " + status, order);
+
+      order.setStatus(status);
+
+      // TODO: Send to KAFKA topic to email user for order status update
+
+      return mapToDTO(repository.save(order));
+    } else {
+      throw new CustomClientException(HttpStatus.NOT_FOUND, "Product not found!");
+    }
   }
 
   public String delete(int id) {
+    repository.findById(id).orElseThrow(() -> new CustomClientException(HttpStatus.NOT_FOUND, "Order not found"));
     repository.deleteById(id);
     return "Order deleted successfully";
   }

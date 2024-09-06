@@ -16,7 +16,7 @@ public class WebClientConfig {
     @Bean
     WebClient productsWebClient() {
         return WebClient.builder()
-                .baseUrl("http://localhost:8081")
+                .baseUrl("http://host.docker.internal:8081")
 //                .filter((request, next) -> next.exchange(request)
 //                        .flatMap(response -> {
 //                            if (response.statusCode().isError()) {

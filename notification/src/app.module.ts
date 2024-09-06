@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
-import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
-import { KafkaConsumerService } from './consumer.service';
-import { SendGridService } from './sendgrid.service';
+import { Module } from "@nestjs/common";
+import { AppService } from "./app.service";
+import { ConfigModule } from "@nestjs/config";
+import { KafkaConsumerService } from "./consumer.service";
+import { SendGridService } from "./sendgrid.service";
 
 /**
  * The main module of the application.

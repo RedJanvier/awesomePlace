@@ -17,6 +17,7 @@ import javax.annotation.PostConstruct;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -47,10 +48,13 @@ public class JwtUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public String getRole(String token) {
+    public List<String> getHeaders(String token) {
         try {
             Map<String, String> payload = mapper.convertValue(getClaims(token), HashMap.class);
-            return payload.get("role");
+            return List.of(
+                payload.get("role"),
+                String.valueOf(payload.get("id"))
+            );
         } catch (Exception e) {
             log.error("ISSUE IN FETTING ROLE {}", e);
             return null;

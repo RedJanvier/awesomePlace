@@ -11,11 +11,12 @@ import {
 import { ApiSecurity, ApiTags } from "@nestjs/swagger";
 import { User } from ".prisma/client";
 import { AuthService } from "./auth.service";
-import { Auth } from "./decorators/auth.decorator";
-import { GetUser } from "./decorators/get-user.decorator";
+import { Auth } from "../_shared/decorators/auth.decorator";
+import { GetUser } from "../_shared/decorators/get-user.decorator";
 import { LoginDto, LoginResultDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
 import JwtRefreshGuard from "./guards/jwt-refresh.guard";
+import { ResponseDto } from "../_shared/dto/response.dto";
 
 @ApiTags("Authentication")
 @Controller("auth")
@@ -23,9 +24,9 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post("register")
-  async register(@Body() dto: RegisterDto): Promise<string> {
+  async register(@Body() dto: RegisterDto): Promise<ResponseDto> {
     const res = await this.authService.register(dto);
-    return res;
+    return new ResponseDto(HttpStatus.CREATED, res);
   }
 
   @Post("/login")
