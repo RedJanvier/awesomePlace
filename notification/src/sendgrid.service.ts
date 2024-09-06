@@ -1,6 +1,6 @@
-import * as SendGrid from '@sendgrid/mail';
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import * as SendGrid from "@sendgrid/mail";
+import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 
 /**
  * Service for sending emails using SendGrid.
@@ -12,7 +12,7 @@ export class SendGridService {
    * @param {ConfigService} configService - NestJS ConfigService for accessing environment variables.
    */
   constructor(private readonly configService: ConfigService) {
-    SendGrid.setApiKey(this.configService.get<string>('SEND_GRID_KEY'));
+    SendGrid.setApiKey(this.configService.get<string>("SEND_GRID_KEY"));
   }
 
   /**
@@ -26,7 +26,7 @@ export class SendGridService {
       console.log(mail);
 
       // Set the 'from' field of the email
-      mail.from = this.configService.get<string>('SEND_GRID_EMAIL');
+      mail.from = this.configService.get<string>("SEND_GRID_EMAIL");
 
       // Send the email using SendGrid
       const transport = await SendGrid.send(mail);

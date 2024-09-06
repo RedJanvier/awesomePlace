@@ -98,9 +98,7 @@ export class AuthService {
   async login(dto: LoginDto) {
     const { email, password } = dto;
     const user = await this.prismaService.user.findFirst({
-      where: {
-        email,
-      },
+      where: { email },
     });
     if (!user)
       throw new BadRequestException("The email or password is incorrect");
