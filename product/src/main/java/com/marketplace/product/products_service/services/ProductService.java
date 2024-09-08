@@ -1,6 +1,8 @@
 package com.marketplace.product.products_service.services;
 
 import com.google.gson.Gson;
+import com.marketplace.product.products_service.dto.CategoryResponse;
+import com.marketplace.product.products_service.dto.CategoryResponseShort;
 import com.marketplace.product.products_service.dto.ProductRequest;
 import com.marketplace.product.products_service.dto.ProductResponse;
 import com.marketplace.product.products_service.exceptions.CustomClientException;
@@ -22,6 +24,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -128,6 +131,10 @@ public class ProductService {
   }
 
   private ProductResponse getProductResponse(Product product) {
+    CategoryResponseShort category = CategoryResponseShort.builder()
+      .id(product.getCategory().id)
+      .name(product.getCategory().name)
+      .build();
     return ProductResponse.builder()
             .id(product.getId())
             .name(product.getName())
@@ -135,7 +142,7 @@ public class ProductService {
             .quantity(product.getQuantity())
             .tags(product.getTags())
             .featured(product.getFeatured())
-            .category(product.getCategory())
+            .category(category)
             .created_at(product.getCreated_at())
             .updated_at(product.getUpdated_at())
             .build();
