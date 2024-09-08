@@ -11,14 +11,17 @@ import com.awesome.marketplace.orders.orders_service.dto.ProductResponse;
 import com.awesome.marketplace.orders.orders_service.dto.ProductsClientResponseDto;
 import com.awesome.marketplace.orders.orders_service.exceptions.CustomClientException;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.awesome.marketplace.orders.orders_service.dto.OrderRequest;
 import com.awesome.marketplace.orders.orders_service.dto.OrderResponse;
 import com.awesome.marketplace.orders.orders_service.models.Order;
-import com.awesome.marketplace.orders.orders_service.models.Product;
 import com.awesome.marketplace.orders.orders_service.repositories.OrderRepository;
+import com.google.gson.Gson;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,8 +30,17 @@ import lombok.RequiredArgsConstructor;
 @Slf4j
 public class OrderService {
   private final OrderRepository repository;
-  private final ProductClient productClient;
   private final RestService<ProductsClientResponseDto> restService;
+  private Gson gson = new Gson();
+
+  private static final String TOPIC = "products.reduce_quantity.evt";
+
+  @Autowired
+  private KafkaTemplate<String, String> kafkaTemplate;
+
+  public void sendKafkaMessage(String message) {
+    kafkaTemplate.send(TOPIC, message);
+  }
 
   public List<OrderResponse> getAll(String id, String role) {
     Integer userId = Integer.parseInt(id);
@@ -40,11 +52,12 @@ public class OrderService {
 
   public OrderResponse add(OrderRequest orderReq, String id) throws CustomClientException {
     Integer userId = Integer.parseInt(id);
-    Map<String, Object> body = new HashMap<>();
-    HttpHeaders headers = new HttpHeaders();
-    headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString());
     ResponseEntity<ProductsClientResponseDto> productResponse = null;
+
     try {
+      Map<String, Object> body = new HashMap<>();
+      HttpHeaders headers = new HttpHeaders();
+      headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString());
       productResponse = restService.sendRequest(
         "http://host.docker.internal:8081/api/product/" + orderReq.productId,
         HttpMethod.GET,
@@ -56,8 +69,14 @@ public class OrderService {
       log.error("EXCEPTION CREATING ORDER: {}", e);
       throw new CustomClientException(HttpStatus.NOT_FOUND, "Product not found!");
     }
+    
     ProductResponse product = Objects.requireNonNull(productResponse.getBody()).getData();
 
+    if (orderReq.quantity <= 0)
+      throw new CustomClientException(
+        HttpStatus.BAD_REQUEST,
+        "Product quantity must be greater than zero"
+      );
     if (orderReq.quantity > product.getQuantity().intValueExact())
       throw new CustomClientException(
         HttpStatus.BAD_REQUEST,
@@ -72,7 +91,7 @@ public class OrderService {
 
     Order savedOrder = repository.save(order);
 
-    // TODO: Send to KAFKA topic to reduce quantity of product
+    sendKafkaMessage(gson.toJson(order));
 
     return mapToDTO(savedOrder, product);
   }
