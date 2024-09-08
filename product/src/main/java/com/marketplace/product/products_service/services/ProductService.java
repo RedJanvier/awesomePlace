@@ -1,5 +1,6 @@
 package com.marketplace.product.products_service.services;
 
+import com.google.gson.Gson;
 import com.marketplace.product.products_service.dto.ProductRequest;
 import com.marketplace.product.products_service.dto.ProductResponse;
 import com.marketplace.product.products_service.exceptions.CustomClientException;
@@ -14,19 +15,26 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ProductService {
 
   private final ProductRepository productRepository;
   private final CategoryService categoryService;
   private final EntityManager entityManager;
+  private final Gson gson = new Gson();
 
   public List<ProductResponse> getAll(Integer category, String tag, String query) {
     // List<Product> products = productRepository.findAll();
@@ -97,6 +105,23 @@ public class ProductService {
       product.setFeatured(true);
 
       return getProductResponse(productRepository.save(product));
+    } else {
+      throw new CustomClientException(HttpStatus.NOT_FOUND, "Product not found!");
+    }
+  }
+
+  @KafkaListener(topics = "products.reduce_quantity.evt", groupId = "products-consumer")
+  public void reduceQty(String json) throws CustomClientException {
+    HashMap<String, Object> order = gson.fromJson(json, HashMap.class);
+    BigDecimal quantity = new BigDecimal(order.get("quantity").toString());
+    Integer id = Integer.parseInt(order.get("productId").toString().split("\\.")[0]);
+
+    Optional<Product> res = productRepository.findById(id);
+
+    if (res.isPresent()) {
+      Product product = res.get();
+      product.setQuantity(product.quantity.subtract(quantity));
+      productRepository.save(product);
     } else {
       throw new CustomClientException(HttpStatus.NOT_FOUND, "Product not found!");
     }
